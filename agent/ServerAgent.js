@@ -1,13 +1,6 @@
-import { Configuration, OpenAIApi } from "openai";
 import extract from "extract-json-from-string";
 
-import env from "./env.json" assert { type: "json" };
-
-const configuration = new Configuration({
-  apiKey: env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
+import invokeModel from "./modelClient.js";
 
 class ServerAgent {
   constructor(id) {
@@ -58,7 +51,7 @@ class ServerAgent {
       The JSON response indicating the next move is.
       `
 
-      const completion = await this.callOpenAI(prompt, 0);
+      const completion = await this.callModel(prompt, 0);
       return completion;
 
     } catch (error) {
@@ -66,28 +59,25 @@ class ServerAgent {
     }
   }
 
-  async callOpenAI(prompt, attempt) {
+  async callModel(prompt, attempt) {
     if (attempt > 3) {
       return null;
     }
-  
+
     if (attempt > 0) {
-      prompt = "YOU MUST ONLY RESPOND WITH VALID JSON OBJECTS\N" + prompt;
+      prompt = "YOU MUST ONLY RESPOND WITH VALID JSON OBJECTS\n" + prompt;
     }
-  
-    const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-    });
-  
-    console.log('OpenAI response', response.data.choices[0].message.content)
-  
-    const responseObject = this.cleanAndProcess(response.data.choices[0].message.content);
+
+    const responseText = await invokeModel(prompt);
+
+    console.log('Model response', responseText);
+
+    const responseObject = this.cleanAndProcess(responseText);
     if (responseObject) {
       return responseObject;
     }
-  
-    return await this.callOpenAI(prompt, attempt + 1);
+
+    return await this.callModel(prompt, attempt + 1);
   }
   
   cleanAndProcess(text) {
