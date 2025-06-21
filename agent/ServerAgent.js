@@ -1,6 +1,6 @@
 import extract from "extract-json-from-string";
 
-import callModelApi from "./modelClient.js";
+import invokeModel from "./modelClient.js";
 
 class ServerAgent {
   constructor(id) {
@@ -68,7 +68,7 @@ class ServerAgent {
       prompt = "YOU MUST ONLY RESPOND WITH VALID JSON OBJECTS\n" + prompt;
     }
 
-    const responseText = await callModelApi(prompt);
+    const responseText = await invokeModel(prompt);
 
     console.log('Model response', responseText);
 

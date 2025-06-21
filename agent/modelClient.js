@@ -1,4 +1,7 @@
 import { Configuration, OpenAIApi } from "openai";
+import http from "http";
+import https from "https";
+import { URL } from "url";
 import env from "./env.json" assert { type: "json" };
 
 let openai;
@@ -18,14 +21,37 @@ export default async function callModel(prompt) {
     return response.data.choices[0].message.content;
   }
 
-  const httpResponse = await fetch(env.LM_STUDIO_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      messages: [{ role: "user", content: prompt }],
-      stream: false,
-    }),
+  const url = new URL(env.LM_STUDIO_URL);
+  const transport = url.protocol === "https:" ? https : http;
+
+  const requestBody = JSON.stringify({
+    messages: [{ role: "user", content: prompt }],
+    stream: false,
   });
-  const data = await httpResponse.json();
-  return data.choices[0].message.content;
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port,
+    path: url.pathname,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(requestBody),
+    },
+  };
+
+  const responseText = await new Promise((resolve, reject) => {
+    const req = transport.request(options, (res) => {
+      let data = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => resolve(data));
+    });
+    req.on("error", reject);
+    req.write(requestBody);
+    req.end();
+  });
+
+  const parsed = JSON.parse(responseText);
+  return parsed.choices[0].message.content;
 }

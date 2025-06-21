@@ -15,7 +15,7 @@ GPTRPG is intended to be run locally. To run:
 
 1. Copy `agent/env.example.json` to `agent/env.json` and update the values.
    * `MODEL_PROVIDER` can be set to `openai` or `lm-studio`.
-   * `LM_STUDIO_URL` is the address of the LM Studio compatible API (for example `http://localhost:1234/v1/chat/completions`).
+   * `LM_STUDIO_URL` is the address of the LM Studio compatible API (for example `http://127.0.0.1:1234/v1/chat/completions`).
    * `OPENAI_API_KEY` is required when using the OpenAI API.
 2. Only tested with node 16.19.0
 2. In the `gptrpg` directory run `npm install` to install dependencies for all projects.
